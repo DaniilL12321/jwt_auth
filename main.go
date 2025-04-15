@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"github.com/joho/godotenv"
 	"os"
@@ -29,10 +28,6 @@ func main() {
 	signature := []byte(os.Getenv("SIGNATURE_SECRET"))
 	println("SIGNATURE_SECRET:", signature)
 
-	accessToken, _ := auth.CreateAccessToken(ip, guid, signature)
-	refreshToken, hash, _ := auth.CreateRefreshToken()
-	fmt.Println("\nаксес:", accessToken)
-	fmt.Println("\nрефреш:", base64.StdEncoding.EncodeToString(refreshToken))
-	fmt.Println("\nхэш рефреша]:", base64.StdEncoding.EncodeToString(hash))
+	auth.CreatePairTokens(ip, guid, signature)
 
 }
