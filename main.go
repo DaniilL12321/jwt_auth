@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"testTaskBackDev/auth"
 	"testTaskBackDev/database"
@@ -14,7 +15,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	} else {
-		fmt.Printf("DB connect")
+		fmt.Printf("DB connect\n\n")
 	}
 
 	defer dbpool.Close()
@@ -23,6 +24,10 @@ func main() {
 	guid := "123e4567-e89b-12d3-a456-426614174000"
 	signature := []byte("kmkmewfml")
 
-	token, _ := auth.CreateAccessToken(ip, guid, signature)
-	fmt.Println("\n\nТокен:", token)
+	accessToken, _ := auth.CreateAccessToken(ip, guid, signature)
+	refreshToken, hash, _ := auth.CreateRefreshToken()
+	fmt.Println("\nаксес:", accessToken)
+	fmt.Println("\nрефреш:", base64.StdEncoding.EncodeToString(refreshToken))
+	fmt.Println("\nхэш рефреша]:", base64.StdEncoding.EncodeToString(hash))
+
 }
