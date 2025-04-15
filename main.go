@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"github.com/joho/godotenv"
+	"os"
 	"testTaskBackDev/auth"
 	"testTaskBackDev/database"
 )
@@ -11,6 +13,8 @@ import (
 func main() {
 	ctx := context.Background()
 	dbpool, err := database.InitDBconnection(ctx)
+
+	godotenv.Load()
 
 	if err != nil {
 		panic(err)
@@ -22,7 +26,8 @@ func main() {
 
 	ip := "127.0.0.1"
 	guid := "123e4567-e89b-12d3-a456-426614174000"
-	signature := []byte("kmkmewfml")
+	signature := []byte(os.Getenv("SIGNATURE_SECRET"))
+	println("SIGNATURE_SECRET:", signature)
 
 	accessToken, _ := auth.CreateAccessToken(ip, guid, signature)
 	refreshToken, hash, _ := auth.CreateRefreshToken()
