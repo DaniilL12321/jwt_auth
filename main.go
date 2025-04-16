@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"github.com/joho/godotenv"
 	"os"
@@ -10,24 +9,27 @@ import (
 )
 
 func main() {
-	ctx := context.Background()
-	dbpool, err := database.InitDBconnection(ctx)
-
-	godotenv.Load()
+	conn, err := database.InitDBconnection()
 
 	if err != nil {
 		panic(err)
 	} else {
 		fmt.Printf("DB connect\n\n")
 	}
+	defer conn.PgConn()
 
-	defer dbpool.Close()
+	godotenv.Load()
 
 	ip := "127.0.0.1"
 	guid := "123e4567-e89b-12d3-a456-426614174000"
 	signature := []byte(os.Getenv("SIGNATURE_SECRET"))
 	println("SIGNATURE_SECRET:", signature)
 
-	auth.CreatePairTokens(ip, guid, signature)
+	_, refreshToken, _ := auth.CreatePairTokens(ip, guid, signature)
+	{
+		//fmt.Println("\nаксес:", accessToken)
+		//fmt.Println("\nрефреш:", base64.StdEncoding.EncodeToString(refreshToken))
+		database.SaveDataUser(conn, "kwemfkwe", "ljkefw", refreshToken)
+	}
 
 }

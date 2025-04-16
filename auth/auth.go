@@ -2,8 +2,6 @@ package auth
 
 import (
 	"crypto/rand"
-	"encoding/base64"
-	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 	"time"
@@ -40,11 +38,10 @@ func CreateRefreshToken() (refreshToken []byte, hash []byte, err error) {
 
 func CreatePairTokens(ip, guid string, signature []byte) (accessToken string, refreshToken []byte, err error) {
 	accessToken, _ = CreateAccessToken(ip, guid, signature)
-	var hash []byte
-	refreshToken, hash, _ = CreateRefreshToken()
+	refreshToken, _, _ = CreateRefreshToken()
 
-	fmt.Println("\nаксес:", accessToken)
-	fmt.Println("\nрефреш:", base64.StdEncoding.EncodeToString(refreshToken))
-	fmt.Println("\nхэш рефреша]:", base64.StdEncoding.EncodeToString(hash))
+	//fmt.Println("\nаксес:", accessToken)
+	//fmt.Println("\nрефреш:", base64.StdEncoding.EncodeToString(refreshToken))
+	//fmt.Println("\nхэш рефреша]:", base64.StdEncoding.EncodeToString(hash))
 	return accessToken, refreshToken, nil
 }
