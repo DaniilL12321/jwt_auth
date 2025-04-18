@@ -1,14 +1,61 @@
 package main
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"github.com/jackc/pgx/v4"
 	"github.com/joho/godotenv"
+	"log"
+	"net/http"
 	"os"
 	"testTaskBackDev/auth"
 	"testTaskBackDev/database"
 )
 
+type Request struct {
+	RefreshToken string `json:"refresh_token"`
+}
+
+type Response struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}
+
 func main() {
+	conn := connectToDb()
+	godotenv.Load()
+
+	ip := auth.GetIpUser()
+	guid := "5d424e86-29f7-4f0e-9d23-c621694cb938"
+	signature := []byte(os.Getenv("SIGNATURE_SECRET"))
+	println("SIGNATURE_SECRET:", signature)
+
+	accessToken, refreshToken, hash, _ := auth.CreatePairTokens(ip, guid, signature)
+	{
+		//baseRefresh := base64.StdEncoding.EncodeToString(refreshToken)
+		//noBaseRefresh, _ := base64.StdEncoding.DecodeString(baseRefresh)
+		fmt.Println("\nаксес:", accessToken)
+
+		//fmt.Println("\nбейс64:", []byte(baseRefresh))
+		//fmt.Println("\nобратно:", noBaseRefresh)
+
+		fmt.Println("\nрефреш:", base64.StdEncoding.EncodeToString(refreshToken))
+		fmt.Println("\nхэш:", base64.StdEncoding.EncodeToString(hash))
+		database.SaveDataUser(conn, "email.com", "alkmfklmeklmef", hash)
+		//database.FindLastRefreshToken(conn, guid)
+	}
+
+	refreshToken, _ = base64.StdEncoding.DecodeString("HYJcGEBPUBcmrL8BuY9TFVQVml96/JENe4JT8yiCo9vekLVU4pSoZaWf2dYwhCve5ni0yLM9Of6Ja0W5UdcnyEafMxMpY9V3")
+
+	fmt.Println("kjwenfkjnmwefjwjeknfjkwenjkwnegjknwegjkn", refreshToken)
+	database.UpdateRefreshToken(conn, refreshToken, guid)
+
+	http.HandleFunc("POST /", createPair)
+	http.ListenAndServe(":8080", nil)
+}
+
+func connectToDb() (conn *pgx.Conn) {
 	conn, err := database.InitDBconnection()
 
 	if err != nil {
@@ -17,31 +64,47 @@ func main() {
 		fmt.Println("DB connect\n\n")
 	}
 	defer conn.PgConn()
+	return conn
+}
 
-	godotenv.Load()
-
-	ip := auth.GetIpUser()
-	guid := "1d51b15b-9ca5-4a7e-8803-507152ff7003"
-	signature := []byte(os.Getenv("SIGNATURE_SECRET"))
-	println("SIGNATURE_SECRET:", signature)
-
-	accessToken, _, _, _ := auth.CreatePairTokens(ip, guid, signature)
-	{
-		fmt.Println("\nаксес:", accessToken)
-		//fmt.Println("\nрефреш:", refreshToken)
-		//fmt.Println("\nхэш:", hash)
-		//database.SaveDataUser(conn, "lkqemflkmqelkfmqelkmf", "1212ljkefw", hash)
-		//database.FindLastRefreshToken(conn, guid)
+func createPair(w http.ResponseWriter, r *http.Request) {
+	conn := connectToDb()
+	guid := r.URL.Query().Get("guid")
+	if guid == "" {
+		log.Println("guid not found")
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("guid not found"))
+		return
 	}
 
-	refreshToken := []byte{
-		107, 59, 95, 156, 176, 106, 149, 219, 120, 206, 97, 135, 174, 162, 106, 207,
-		88, 157, 182, 89, 66, 110, 130, 239, 105, 117, 248, 237, 14, 198, 35, 116,
-		251, 35, 173, 76, 254, 216, 62, 28, 120, 245, 178, 145, 86, 172, 187, 170,
-		97, 247, 131, 185, 108, 22, 6, 69, 219, 26, 223, 11, 194, 109, 82, 250,
-		103, 123, 141, 196, 248, 64, 82, 10,
+	var re Request
+	json.NewDecoder(r.Body).Decode(&re)
+
+	decodedRefreshToken, _ := base64.StdEncoding.DecodeString(re.RefreshToken)
+	fmt.Println("Decode refreshToken:", decodedRefreshToken)
+	isOkToken, err := database.CheckRefreshToken(conn, decodedRefreshToken, guid)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(err.Error()))
+		return
 	}
 
-	database.UpdateRefreshToken(conn, refreshToken, guid)
+	if !isOkToken {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("token not corrected"))
+		return
+	}
+
+	accessToken, newRefreshToken := database.UpdateRefreshToken(conn, decodedRefreshToken, guid)
+
+	response := Response{
+		AccessToken:  accessToken,
+		RefreshToken: newRefreshToken,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	json.NewEncoder(w).Encode(response)
 
 }

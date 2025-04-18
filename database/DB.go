@@ -37,8 +37,8 @@ func SaveDataUser(conn *pgx.Conn, email string, password string, refreshToken []
 	fmt.Println("data user successfully saved")
 }
 
-func UpdateRefreshToken(conn *pgx.Conn, refreshToken []byte, guid string) (string, []byte) {
-	acceptRefresh := CheckRefreshToken(conn, refreshToken, guid)
+func UpdateRefreshToken(conn *pgx.Conn, refreshToken []byte, guid string) (string, string) {
+	acceptRefresh, _ := CheckRefreshToken(conn, refreshToken, guid)
 	{
 		if acceptRefresh {
 			ip := auth.GetIpUser()
@@ -48,32 +48,32 @@ func UpdateRefreshToken(conn *pgx.Conn, refreshToken []byte, guid string) (strin
 			query, err := conn.Query(context.Background(), "UPDATE users set refresh_token = $1 WHERE users.guid = $2", hash, guid)
 			if err != nil {
 				log.Fatal(err)
-				return "", nil
+				return "", ""
 			}
 
 			defer query.Close()
 			fmt.Println("user refresh token successfully updated")
 			fmt.Println("new access: ", accessToken)
-			fmt.Println("new refresh: ", refreshToken)
+			fmt.Println("new refresh: ", base64.StdEncoding.EncodeToString(refreshToken))
 			fmt.Println("new hash: ", hash)
 
-			return accessToken, refreshToken
+			return accessToken, base64.StdEncoding.EncodeToString(refreshToken)
 		}
 	}
 
-	return "", nil
+	return "", ""
 }
 
-func CheckRefreshToken(conn *pgx.Conn, refreshToken []byte, guid string) bool {
+func CheckRefreshToken(conn *pgx.Conn, refreshToken []byte, guid string) (bool, error) {
 	savedHashRefreshToken, _ := FindLastRefreshToken(conn, guid)
 	if err := bcrypt.CompareHashAndPassword(savedHashRefreshToken, refreshToken); err != nil {
 		fmt.Println("not correct refresh token")
 		println(base64.StdEncoding.EncodeToString(refreshToken))
 		println(base64.StdEncoding.EncodeToString(savedHashRefreshToken))
-		return false
+		return false, err
 	}
 	fmt.Println("token ok")
-	return true
+	return true, nil
 }
 
 func FindLastRefreshToken(conn *pgx.Conn, guid string) ([]byte, error) {
