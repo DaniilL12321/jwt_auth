@@ -23,7 +23,7 @@ func CreateAccessToken(ip, guid string, signature []byte) (accessToken string, e
 		},
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claimAcc)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claimAcc)
 
 	return token.SignedString(signature)
 }
