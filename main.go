@@ -56,10 +56,10 @@ func createPair(w http.ResponseWriter, r *http.Request) {
 	var re Request
 	json.NewDecoder(r.Body).Decode(&re)
 
-	accessToken := re.AccessToken
+	newAccessToken := re.AccessToken
 	decodedRefreshToken, _ := base64.StdEncoding.DecodeString(re.RefreshToken)
 	fmt.Println("Decode refreshToken:", decodedRefreshToken)
-	isOkToken, err := database.CheckRefreshToken(conn, accessToken, decodedRefreshToken, guid)
+	isOkToken, err := database.CheckRefreshToken(conn, decodedRefreshToken, guid)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusNotFound)
@@ -73,7 +73,8 @@ func createPair(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newAccessToken, newRefreshToken := database.UpdateRefreshToken(conn, accessToken, decodedRefreshToken, guid)
+	var newRefreshToken string
+	newAccessToken, newRefreshToken = database.UpdateRefreshToken(conn, decodedRefreshToken, guid)
 
 	response := Response{
 		Guid:         guid,
