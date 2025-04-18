@@ -4,6 +4,8 @@ import (
 	"crypto/rand"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
+	"io/ioutil"
+	"net/http"
 	"time"
 )
 
@@ -44,4 +46,15 @@ func CreatePairTokens(ip, guid string, signature []byte) (accessToken string, re
 	//fmt.Println("\nрефреш:", base64.StdEncoding.EncodeToString(refreshToken))
 	//fmt.Println("\nхэш рефреша]:", base64.StdEncoding.EncodeToString(hash))
 	return accessToken, refreshToken, nil
+}
+
+func GetIpUser() string {
+	conn, err := http.Get("https://api.ipify.org")
+	if err != nil {
+		return "undefined"
+	}
+	defer conn.Body.Close()
+
+	ip, _ := ioutil.ReadAll(conn.Body)
+	return string(ip)
 }
