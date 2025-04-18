@@ -38,14 +38,14 @@ func CreateRefreshToken() (refreshToken []byte, hash []byte, err error) {
 	return refreshToken, hash, nil
 }
 
-func CreatePairTokens(ip, guid string, signature []byte) (accessToken string, refreshToken []byte, err error) {
+func CreatePairTokens(ip, guid string, signature []byte) (accessToken string, refreshToken []byte, hash []byte, err error) {
 	accessToken, _ = CreateAccessToken(ip, guid, signature)
-	refreshToken, _, _ = CreateRefreshToken()
+	refreshToken, hash, _ = CreateRefreshToken()
 
 	//fmt.Println("\nаксес:", accessToken)
 	//fmt.Println("\nрефреш:", base64.StdEncoding.EncodeToString(refreshToken))
 	//fmt.Println("\nхэш рефреша]:", base64.StdEncoding.EncodeToString(hash))
-	return accessToken, refreshToken, nil
+	return accessToken, refreshToken, hash, nil
 }
 
 func GetIpUser() string {
