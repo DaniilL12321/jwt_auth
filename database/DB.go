@@ -28,14 +28,23 @@ func InitDBconnection() (*pgx.Conn, error) {
 	return conn, nil
 }
 
-func SaveDataUser(conn *pgx.Conn, email string, password string, refreshToken []byte) {
-	rows, err := conn.Query(context.Background(), "INSERT into users(email, password, refresh_token) VALUES ($1, $2, $3)", email, password, refreshToken)
+func SaveDataUser(conn *pgx.Conn, email string, password string, r *http.Request) (string, string, error) {
+	var hash []byte
+
+	id, _ := uuid.NewV4()
+	accessToken, refreshToken, hash, _ := auth.CreatePairTokens(auth.GetIpUser(r), id.String(), []byte(os.Getenv("SIGNATURE_SECRET")))
+	rows, err := conn.Query(context.Background(), "INSERT into users(guid, email, password, refresh_token) VALUES ($1, $2, $3, $4)", id, email, password, hash)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	for rows.Next() {
+		rows.Scan(&email, &password, &hash)
+	}
+
 	defer rows.Close()
 	fmt.Println("data user successfully saved")
+	return accessToken, base64.StdEncoding.EncodeToString(refreshToken), nil
 }
 
 func UpdateRefreshToken(conn *pgx.Conn, refreshToken []byte, guid string, r *http.Request) (string, string) {
@@ -125,4 +134,17 @@ func CheckGuid(conn *pgx.Conn, guid string) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func CheckEmail(conn *pgx.Conn, email string) (bool, error) {
+	query, err := conn.Query(context.Background(), "SELECT email FROM users WHERE email = $1", email)
+	if err != nil {
+		log.Fatal(err)
+		return false, err
+	}
+	defer query.Close()
+	if query.Next() {
+		return false, nil
+	}
+	return true, nil
 }

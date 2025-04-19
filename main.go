@@ -25,11 +25,17 @@ type Response struct {
 	ExpiresAt    time.Time `json:"expires_at"`
 }
 
+type User struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
 func main() {
 	godotenv.Load()
 
-	http.HandleFunc("GET /", createPairById)
-	http.HandleFunc("POST /", createPairByTokens)
+	http.HandleFunc("GET /tokens", createPairById)
+	http.HandleFunc("POST /refresh", createPairByTokens)
+	http.HandleFunc("POST /register", createUser)
 	http.ListenAndServe(":8080", nil)
 }
 
@@ -128,4 +134,32 @@ func createPairById(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(response)
 
+}
+
+func createUser(w http.ResponseWriter, r *http.Request) {
+	conn := connectToDb()
+
+	var user User
+	json.NewDecoder(r.Body).Decode(&user)
+
+	email := user.Email
+	password := user.Password
+
+	EmailIsOk, _ := database.CheckEmail(conn, email)
+	if !EmailIsOk {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("email already used"))
+		return
+	}
+
+	accessToken, refreshToken, _ := database.SaveDataUser(conn, email, password, r)
+
+	response := Response{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		ExpiresAt:    time.Now().Add(time.Hour),
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(response)
 }

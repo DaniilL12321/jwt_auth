@@ -52,7 +52,7 @@ func CreatePairTokens(ip, guid string, signature []byte) (accessToken string, re
 func GetIpUser(r *http.Request) string {
 	ip := r.Header.Get("X-Forwarded-For")
 	if ip == "" {
-		return "undefined"
+		return ""
 	}
 	return ip
 }
