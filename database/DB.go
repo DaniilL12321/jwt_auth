@@ -31,7 +31,8 @@ func SaveDataUser(conn *pgx.Conn, email string, password string, r *http.Request
 
 	id, _ := uuid.NewV4()
 	accessToken, refreshToken, hash, _ := auth.CreatePairTokens(auth.GetIpUser(r), id.String(), []byte(os.Getenv("SIGNATURE_SECRET")))
-	rows, err := conn.Query(context.Background(), "INSERT into users(guid, email, password, refresh_token) VALUES ($1, $2, $3, $4)", id, email, password, hash)
+	passwordHash, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	rows, err := conn.Query(context.Background(), "INSERT into users(guid, email, password, refresh_token) VALUES ($1, $2, $3, $4)", id, email, passwordHash, hash)
 	if err != nil {
 		return "", "", err
 	}
