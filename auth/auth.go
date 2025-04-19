@@ -7,6 +7,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -54,6 +55,8 @@ func GetIpUser(r *http.Request) string {
 	if ip == "" {
 		return ""
 	}
+	ips := strings.Split(ip, ",")
+	ip = strings.TrimSpace(ips[0])
 	return ip
 }
 
