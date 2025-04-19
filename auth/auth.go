@@ -56,7 +56,12 @@ func GetIpUser(r *http.Request) string {
 		return ""
 	}
 	ips := strings.Split(ip, ",")
-	ip = strings.TrimSpace(ips[0])
+	for _, ip := range ips {
+		ip = strings.TrimSpace(ip)
+		if ip != "" {
+			return ip
+		}
+	}
 	return ip
 }
 
