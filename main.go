@@ -3,10 +3,9 @@ package main
 import (
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"github.com/jackc/pgx/v4"
 	"github.com/joho/godotenv"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"testTaskBackDev/auth"
 	"testTaskBackDev/database"
@@ -45,7 +44,7 @@ func connectToDb() (conn *pgx.Conn) {
 	if err != nil {
 		panic(err)
 	} else {
-		fmt.Println("DB connect\n\n")
+		//log.Print("DB connect\n")
 	}
 	defer conn.PgConn()
 	return conn
@@ -60,11 +59,7 @@ func createPairByTokens(w http.ResponseWriter, r *http.Request) {
 	accessToken := re.AccessToken
 
 	claims, _ := auth.ParseToken(accessToken)
-	println(claims.Sub)
-
-	ippp := auth.GetIpUser(r)
-
-	println(ippp)
+	//log.Println(claims.Sub)
 
 	if claims.Ip != auth.GetIpUser(r) {
 		w.WriteHeader(http.StatusForbidden)
@@ -73,10 +68,10 @@ func createPairByTokens(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decodedRefreshToken, _ := base64.StdEncoding.DecodeString(re.RefreshToken)
-	fmt.Println("Decode refreshToken:", decodedRefreshToken)
+	//log.Println("Decode refreshToken:", decodedRefreshToken)
 	isOkToken, err := database.CheckRefreshToken(conn, decodedRefreshToken, claims.Sub)
 	if err != nil {
-		log.Println(err)
+		log.Error(err)
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte(err.Error()))
 		return
@@ -101,6 +96,7 @@ func createPairByTokens(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(response)
 
+	log.Print("tokens refresh with used pair access and refresh token for ", claims.Sub)
 }
 
 // for updating with ID by parametrs Get request
@@ -108,7 +104,7 @@ func createPairById(w http.ResponseWriter, r *http.Request) {
 	conn := connectToDb()
 	guid := r.URL.Query().Get("guid")
 	if guid == "" {
-		log.Println("guid not found")
+		log.Warn("guid not found")
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte("guid not found"))
 		return
@@ -134,6 +130,7 @@ func createPairById(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(response)
 
+	log.Print("tokens refresh with used ID parameter for ", guid)
 }
 
 func createUser(w http.ResponseWriter, r *http.Request) {
@@ -149,6 +146,7 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 	if !EmailIsOk {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte("email already used"))
+		log.Warn("user with email: ", email, " already exists")
 		return
 	}
 
@@ -162,4 +160,6 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(response)
+
+	log.Print("register new user: ", email)
 }

@@ -3,7 +3,6 @@ package database
 import (
 	"context"
 	"encoding/base64"
-	"fmt"
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v4"
 	"golang.org/x/crypto/bcrypt"
@@ -43,7 +42,7 @@ func SaveDataUser(conn *pgx.Conn, email string, password string, r *http.Request
 	}
 
 	defer rows.Close()
-	fmt.Println("data user successfully saved")
+	//fmt.Println("data user successfully saved")
 	return accessToken, base64.StdEncoding.EncodeToString(refreshToken), nil
 }
 
@@ -62,10 +61,10 @@ func UpdateRefreshToken(conn *pgx.Conn, refreshToken []byte, guid string, r *htt
 			}
 
 			defer query.Close()
-			fmt.Println("user refresh token successfully updated")
-			fmt.Println("new access: ", accessToken)
-			fmt.Println("new refresh: ", base64.StdEncoding.EncodeToString(refreshToken))
-			fmt.Println("new hash: ", hash)
+			//fmt.Println("user refresh token successfully updated")
+			//fmt.Println("new access: ", accessToken)
+			//fmt.Println("new refresh: ", base64.StdEncoding.EncodeToString(refreshToken))
+			//fmt.Println("new hash: ", hash)
 
 			return accessToken, base64.StdEncoding.EncodeToString(refreshToken)
 		}
@@ -77,12 +76,12 @@ func UpdateRefreshToken(conn *pgx.Conn, refreshToken []byte, guid string, r *htt
 func CheckRefreshToken(conn *pgx.Conn, refreshToken []byte, guid string) (bool, error) {
 	savedHashRefreshToken, _ := FindLastRefreshToken(conn, guid)
 	if err := bcrypt.CompareHashAndPassword(savedHashRefreshToken, refreshToken); err != nil {
-		fmt.Println("not correct refresh token")
-		println(base64.StdEncoding.EncodeToString(refreshToken))
-		println(base64.StdEncoding.EncodeToString(savedHashRefreshToken))
+		//fmt.Println("not correct refresh token")
+		//println(base64.StdEncoding.EncodeToString(refreshToken))
+		//println(base64.StdEncoding.EncodeToString(savedHashRefreshToken))
 		return false, err
 	}
-	fmt.Println("token ok")
+	//fmt.Println("token ok")
 	return true, nil
 }
 
@@ -112,10 +111,10 @@ func UpdateRefreshTokenById(conn *pgx.Conn, guid string, r *http.Request) (strin
 	}
 
 	defer query.Close()
-	fmt.Println("user refresh token successfully updated")
-	fmt.Println("new access: ", accessToken)
-	fmt.Println("new refresh: ", base64.StdEncoding.EncodeToString(refreshToken))
-	fmt.Println("new hash: ", hash)
+	//fmt.Println("user refresh token successfully updated")
+	//fmt.Println("new access: ", accessToken)
+	//fmt.Println("new refresh: ", base64.StdEncoding.EncodeToString(refreshToken))
+	//fmt.Println("new hash: ", hash)
 
 	return accessToken, base64.StdEncoding.EncodeToString(refreshToken), nil
 
