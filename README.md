@@ -10,12 +10,15 @@
 в ответе примерно так:
 ```json
 {
-    "guid": "3ff3e273-5dda-4075-9f74-a04f6c8bb5ad",
-    "access_token": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJpcCI6IiwxODguNDMuMTEzLjIyNiwgMTcyLjcxLjI0Ni4xMjcsIDEwLjIyMy4xNjIuNjIiLCJzdWIiOiIzZmYzZTI3My01ZGRhLTQwNzUtOWY3NC1hMDRmNmM4YmI1YWQiLCJleHAiOjE3NDUwNjE2Mzh9.vSKAM_f6NUQ-3ZcYgP2kauqRrG7od8frDnbPRANCm2HMCUBS1Twur2AolYqJnxfjAeVWUVt9Y8aqH6M9SevuqQ",
-    "refresh_token": "gzuXVHn65ly+MgfJ0vPE5CwbvMH2htgnWtlGxVhl+dh7V9AYxauJWPMES0BCrrgyAKT12prarvDKhDRUIFhEt63rO7aEe5DU",
-    "expires_at": "2025-04-19T11:20:38.917609199Z"
+    "guid": "89cb6314-5adf-4255-8baa-8bd3999d4623",
+    "access_token": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJpcCI6ImV4YW1wbGUgaXAgYWRkcmVzcyIsInN1YiI6Ijg5Y2I2MzE0LTVhZGYtNDI1NS04YmFhLThiZDM5OTlkNDYyMyIsImV4cCI6MTc0NTA3MTA5NX0.G9DOOsy8qlTdH4WW9cMThq_r9RRj71cd-SYWeCXb7BGXyWvTGj6WYPFuriCGljq9EI3VPHsI33HMUfDO6n_pEQ",
+    "refresh_token": "KJWGq0/n8Og9639c2NRhCZBRZYu9J5M7Be+lZmFTiju9KW3HvwPCx9PW0qz9tXR5mXGNOhP1iLkKlhbIR7vZnsuaeSUXnZPs",
+    "expires_at": "2025-04-19T13:58:15.605241076Z"
 }
 ```
+
+<img width="1154" alt="Снимок экрана 2025-04-19 в 15 59 16" src="https://github.com/user-attachments/assets/add75079-9cf4-4684-8925-c4b51c95f486" />
+
 expires_at: время до которого действителен access token
 
 * GET /tokens - принимает в параметре запрос guid и выдает новую пару access и refresh токенов
