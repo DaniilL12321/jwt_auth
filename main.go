@@ -50,6 +50,7 @@ func connectToDb() (conn *pgx.Conn) {
 	return conn
 }
 
+// for updating with tokens by body Post request
 func createPairByTokens(w http.ResponseWriter, r *http.Request) {
 	conn := connectToDb()
 
@@ -152,7 +153,10 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 
 	accessToken, refreshToken, _ := database.SaveDataUser(conn, email, password, r)
 
+	claims, _ := auth.ParseToken(accessToken)
+
 	response := Response{
+		Guid:         claims.Sub,
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		ExpiresAt:    time.Now().Add(time.Hour),
