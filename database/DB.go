@@ -87,3 +87,41 @@ func FindLastRefreshToken(conn *pgx.Conn, guid string) ([]byte, error) {
 
 	return refreshToken, nil
 }
+
+// for updating with ID by parametrs Get request
+func UpdateRefreshTokenById(conn *pgx.Conn, guid string) (string, string, error) {
+
+	ip := auth.GetIpUser()
+	signature := []byte(os.Getenv("SIGNATURE_SECRET"))
+
+	accessToken, refreshToken, hash, _ := auth.CreatePairTokens(ip, guid, signature)
+	query, err := conn.Query(context.Background(), "UPDATE users set refresh_token = $1 WHERE users.guid = $2", hash, guid)
+	if err != nil {
+		log.Fatal(err)
+		return "", "", nil
+	}
+
+	defer query.Close()
+	fmt.Println("user refresh token successfully updated")
+	fmt.Println("new access: ", accessToken)
+	fmt.Println("new refresh: ", base64.StdEncoding.EncodeToString(refreshToken))
+	fmt.Println("new hash: ", hash)
+
+	return accessToken, base64.StdEncoding.EncodeToString(refreshToken), nil
+
+}
+
+func CheckGuid(conn *pgx.Conn, guid string) (bool, error) {
+	query, err := conn.Query(context.Background(), "SELECT guid FROM users WHERE guid = $1", guid)
+	if err != nil {
+		log.Fatal(err)
+		return false, err
+	}
+	defer query.Close()
+
+	if query.Next() {
+		return true, nil
+	}
+
+	return false, nil
+}

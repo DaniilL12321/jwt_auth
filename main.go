@@ -27,6 +27,7 @@ type Response struct {
 func main() {
 	godotenv.Load()
 
+	http.HandleFunc("GET /", createPairById)
 	http.HandleFunc("POST /", createPair)
 	http.ListenAndServe(":8080", nil)
 }
@@ -75,6 +76,39 @@ func createPair(w http.ResponseWriter, r *http.Request) {
 
 	var newRefreshToken string
 	newAccessToken, newRefreshToken = database.UpdateRefreshToken(conn, decodedRefreshToken, guid)
+
+	response := Response{
+		Guid:         guid,
+		AccessToken:  newAccessToken,
+		RefreshToken: newRefreshToken,
+		ExpiresAt:    time.Now().Add(time.Hour),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	json.NewEncoder(w).Encode(response)
+
+}
+
+// for updating with ID by parametrs Get request
+func createPairById(w http.ResponseWriter, r *http.Request) {
+	conn := connectToDb()
+	guid := r.URL.Query().Get("guid")
+	if guid == "" {
+		log.Println("guid not found")
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("guid not found"))
+		return
+	}
+
+	isGuid, _ := database.CheckGuid(conn, guid)
+	if !isGuid {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("guid not found"))
+		return
+	}
+
+	newAccessToken, newRefreshToken, _ := database.UpdateRefreshTokenById(conn, guid)
 
 	response := Response{
 		Guid:         guid,
