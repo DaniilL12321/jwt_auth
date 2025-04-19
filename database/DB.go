@@ -6,7 +6,6 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v4"
 	"golang.org/x/crypto/bcrypt"
-	"log"
 	"net/http"
 	"os"
 	"testTaskBackDev/auth"
@@ -34,7 +33,7 @@ func SaveDataUser(conn *pgx.Conn, email string, password string, r *http.Request
 	accessToken, refreshToken, hash, _ := auth.CreatePairTokens(auth.GetIpUser(r), id.String(), []byte(os.Getenv("SIGNATURE_SECRET")))
 	rows, err := conn.Query(context.Background(), "INSERT into users(guid, email, password, refresh_token) VALUES ($1, $2, $3, $4)", id, email, password, hash)
 	if err != nil {
-		log.Fatal(err)
+		return "", "", err
 	}
 
 	for rows.Next() {
@@ -46,31 +45,29 @@ func SaveDataUser(conn *pgx.Conn, email string, password string, r *http.Request
 	return accessToken, base64.StdEncoding.EncodeToString(refreshToken), nil
 }
 
-func UpdateRefreshToken(conn *pgx.Conn, refreshToken []byte, guid string, r *http.Request) (string, string) {
+func UpdateRefreshToken(conn *pgx.Conn, refreshToken []byte, guid string, r *http.Request) (string, string, error) {
 	acceptRefresh, _ := CheckRefreshToken(conn, refreshToken, guid)
-	{
-		if acceptRefresh {
-			ip := auth.GetIpUser(r)
-			signature := []byte(os.Getenv("SIGNATURE_SECRET"))
 
-			accessToken, refreshToken, hash, _ := auth.CreatePairTokens(ip, guid, signature)
-			query, err := conn.Query(context.Background(), "UPDATE users set refresh_token = $1 WHERE users.guid = $2", hash, guid)
-			if err != nil {
-				log.Fatal(err)
-				return "", ""
-			}
+	if acceptRefresh {
+		ip := auth.GetIpUser(r)
+		signature := []byte(os.Getenv("SIGNATURE_SECRET"))
 
-			defer query.Close()
-			//fmt.Println("user refresh token successfully updated")
-			//fmt.Println("new access: ", accessToken)
-			//fmt.Println("new refresh: ", base64.StdEncoding.EncodeToString(refreshToken))
-			//fmt.Println("new hash: ", hash)
-
-			return accessToken, base64.StdEncoding.EncodeToString(refreshToken)
+		accessToken, refreshToken, hash, _ := auth.CreatePairTokens(ip, guid, signature)
+		query, err := conn.Query(context.Background(), "UPDATE users set refresh_token = $1 WHERE users.guid = $2", hash, guid)
+		if err != nil {
+			return "", "", err
 		}
+
+		defer query.Close()
+		//fmt.Println("user refresh token successfully updated")
+		//fmt.Println("new access: ", accessToken)
+		//fmt.Println("new refresh: ", base64.StdEncoding.EncodeToString(refreshToken))
+		//fmt.Println("new hash: ", hash)
+
+		return accessToken, base64.StdEncoding.EncodeToString(refreshToken), nil
 	}
 
-	return "", ""
+	return "", "", nil
 }
 
 func CheckRefreshToken(conn *pgx.Conn, refreshToken []byte, guid string) (bool, error) {
@@ -106,8 +103,7 @@ func UpdateRefreshTokenById(conn *pgx.Conn, guid string, r *http.Request) (strin
 	accessToken, refreshToken, hash, _ := auth.CreatePairTokens(ip, guid, signature)
 	query, err := conn.Query(context.Background(), "UPDATE users set refresh_token = $1 WHERE users.guid = $2", hash, guid)
 	if err != nil {
-		log.Fatal(err)
-		return "", "", nil
+		return "", "", err
 	}
 
 	defer query.Close()
@@ -123,7 +119,6 @@ func UpdateRefreshTokenById(conn *pgx.Conn, guid string, r *http.Request) (strin
 func CheckGuid(conn *pgx.Conn, guid string) (bool, error) {
 	query, err := conn.Query(context.Background(), "SELECT guid FROM users WHERE guid = $1", guid)
 	if err != nil {
-		log.Fatal(err)
 		return false, err
 	}
 	defer query.Close()
@@ -138,7 +133,6 @@ func CheckGuid(conn *pgx.Conn, guid string) (bool, error) {
 func CheckEmail(conn *pgx.Conn, email string) (bool, error) {
 	query, err := conn.Query(context.Background(), "SELECT email FROM users WHERE email = $1", email)
 	if err != nil {
-		log.Fatal(err)
 		return false, err
 	}
 	defer query.Close()
