@@ -2,10 +2,11 @@ package auth
 
 import (
 	"crypto/rand"
+	"errors"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
-	"io/ioutil"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -48,13 +49,33 @@ func CreatePairTokens(ip, guid string, signature []byte) (accessToken string, re
 	return accessToken, refreshToken, hash, nil
 }
 
-func GetIpUser() string {
-	conn, err := http.Get("https://api.ipify.org")
-	if err != nil {
+func GetIpUser(r *http.Request) string {
+	ip := r.Header.Get("X-Forwarded-For")
+	if ip == "" {
 		return "undefined"
 	}
-	defer conn.Body.Close()
+	return ip
+}
 
-	ip, _ := ioutil.ReadAll(conn.Body)
-	return string(ip)
+type ParsedClaims struct {
+	Ip  string `json:"ip"`
+	Exp int64  `json:"exp"`
+	Sub string `json:"sub"`
+	jwt.RegisteredClaims
+}
+
+func ParseToken(accessToken string) (*ParsedClaims, error) {
+	token, err := jwt.ParseWithClaims(accessToken, &ParsedClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(os.Getenv("SIGNATURE_SECRET")), nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if claims, ok := token.Claims.(*ParsedClaims); ok && token.Valid {
+		return claims, nil
+	}
+
+	return nil, errors.New("invalid token")
 }

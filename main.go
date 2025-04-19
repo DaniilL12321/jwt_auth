@@ -8,6 +8,7 @@ import (
 	"github.com/joho/godotenv"
 	"log"
 	"net/http"
+	"testTaskBackDev/auth"
 	"testTaskBackDev/database"
 	"time"
 )
@@ -28,7 +29,7 @@ func main() {
 	godotenv.Load()
 
 	http.HandleFunc("GET /", createPairById)
-	http.HandleFunc("POST /", createPair)
+	http.HandleFunc("POST /", createPairByTokens)
 	http.ListenAndServe(":8080", nil)
 }
 
@@ -44,23 +45,30 @@ func connectToDb() (conn *pgx.Conn) {
 	return conn
 }
 
-func createPair(w http.ResponseWriter, r *http.Request) {
+func createPairByTokens(w http.ResponseWriter, r *http.Request) {
 	conn := connectToDb()
-	guid := r.URL.Query().Get("guid")
-	if guid == "" {
-		log.Println("guid not found")
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("guid not found"))
-		return
-	}
 
 	var re Request
 	json.NewDecoder(r.Body).Decode(&re)
 
-	newAccessToken := re.AccessToken
+	accessToken := re.AccessToken
+
+	claims, _ := auth.ParseToken(accessToken)
+	println(claims.Sub)
+
+	ippp := auth.GetIpUser(r)
+
+	println(ippp)
+
+	if claims.Ip != auth.GetIpUser(r) {
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte("ip not correct"))
+		return
+	}
+
 	decodedRefreshToken, _ := base64.StdEncoding.DecodeString(re.RefreshToken)
 	fmt.Println("Decode refreshToken:", decodedRefreshToken)
-	isOkToken, err := database.CheckRefreshToken(conn, decodedRefreshToken, guid)
+	isOkToken, err := database.CheckRefreshToken(conn, decodedRefreshToken, claims.Sub)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusNotFound)
@@ -74,11 +82,10 @@ func createPair(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var newRefreshToken string
-	newAccessToken, newRefreshToken = database.UpdateRefreshToken(conn, decodedRefreshToken, guid)
+	newAccessToken, newRefreshToken := database.UpdateRefreshToken(conn, decodedRefreshToken, claims.Sub, r)
 
 	response := Response{
-		Guid:         guid,
+		Guid:         claims.Sub,
 		AccessToken:  newAccessToken,
 		RefreshToken: newRefreshToken,
 		ExpiresAt:    time.Now().Add(time.Hour),
@@ -108,7 +115,7 @@ func createPairById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newAccessToken, newRefreshToken, _ := database.UpdateRefreshTokenById(conn, guid)
+	newAccessToken, newRefreshToken, _ := database.UpdateRefreshTokenById(conn, guid, r)
 
 	response := Response{
 		Guid:         guid,

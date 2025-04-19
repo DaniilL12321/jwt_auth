@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v4"
 	"golang.org/x/crypto/bcrypt"
 	"log"
+	"net/http"
 	"os"
 	"testTaskBackDev/auth"
 )
@@ -37,11 +38,11 @@ func SaveDataUser(conn *pgx.Conn, email string, password string, refreshToken []
 	fmt.Println("data user successfully saved")
 }
 
-func UpdateRefreshToken(conn *pgx.Conn, refreshToken []byte, guid string) (string, string) {
+func UpdateRefreshToken(conn *pgx.Conn, refreshToken []byte, guid string, r *http.Request) (string, string) {
 	acceptRefresh, _ := CheckRefreshToken(conn, refreshToken, guid)
 	{
 		if acceptRefresh {
-			ip := auth.GetIpUser()
+			ip := auth.GetIpUser(r)
 			signature := []byte(os.Getenv("SIGNATURE_SECRET"))
 
 			accessToken, refreshToken, hash, _ := auth.CreatePairTokens(ip, guid, signature)
@@ -89,9 +90,9 @@ func FindLastRefreshToken(conn *pgx.Conn, guid string) ([]byte, error) {
 }
 
 // for updating with ID by parametrs Get request
-func UpdateRefreshTokenById(conn *pgx.Conn, guid string) (string, string, error) {
+func UpdateRefreshTokenById(conn *pgx.Conn, guid string, r *http.Request) (string, string, error) {
 
-	ip := auth.GetIpUser()
+	ip := auth.GetIpUser(r)
 	signature := []byte(os.Getenv("SIGNATURE_SECRET"))
 
 	accessToken, refreshToken, hash, _ := auth.CreatePairTokens(ip, guid, signature)
