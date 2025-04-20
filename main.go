@@ -35,14 +35,27 @@ type User struct {
 	Password string `json:"password"`
 }
 
+func withCors(handler http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Authorization")
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		handler(w, r)
+	}
+}
+
 func main() {
 	godotenv.Load()
 	startTime = time.Now()
 
 	http.HandleFunc("GET /uptime", uptimeCheck)
-	http.HandleFunc("GET /tokens", createPairById)
-	http.HandleFunc("POST /refresh", createPairByTokens)
-	http.HandleFunc("POST /register", createUser)
+	http.HandleFunc("GET /tokens", withCors(createPairById))
+	http.HandleFunc("POST /refresh", withCors(createPairByTokens))
+	http.HandleFunc("POST /register", withCors(createUser))
 	http.ListenAndServe(":8080", nil)
 }
 
@@ -52,6 +65,7 @@ func uptimeCheck(w http.ResponseWriter, request *http.Request) {
 
 	uptime := time.Since(startTime).Milliseconds()
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(uptime)
 	log.Println("check uptime: ", uptime)
 	return
