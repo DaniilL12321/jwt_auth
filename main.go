@@ -7,10 +7,12 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/rs/cors"
 	log "github.com/sirupsen/logrus"
+	"github.com/swaggo/http-swagger"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"testTaskBackDev/auth"
 	"testTaskBackDev/database"
+	_ "testTaskBackDev/docs"
 	"testTaskBackDev/smtp"
 	"time"
 )
@@ -39,6 +41,8 @@ type User struct {
 func main() {
 	godotenv.Load()
 	startTime = time.Now()
+
+	http.HandleFunc("/swagger/", httpSwagger.WrapHandler)
 
 	http.HandleFunc("GET /uptime", uptimeCheck)
 	http.HandleFunc("GET /tokens", createPairById)
