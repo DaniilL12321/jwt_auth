@@ -93,6 +93,19 @@ func connectToDb() (conn *pgx.Conn) {
 }
 
 // for updating with tokens by body Post request
+
+// @createPairByTokens godoc
+//
+// @Summary get pair new access+refresh tokens by old pair tokens
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body Request true "old tokens"
+// @Success 200 {array} Response
+// @Failure 400 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Router /refresh [post]
 func createPairByTokens(w http.ResponseWriter, r *http.Request) {
 	conn := connectToDb()
 
@@ -206,6 +219,17 @@ func createPairByTokens(w http.ResponseWriter, r *http.Request) {
 }
 
 // for updating with ID by parametrs Get request
+
+// @createPairById godoc
+//
+// @Summary get pair access+refresh tokens by ID
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param guid query string true "User ID" format(uuid)
+// @Success 200 {array} Response
+// @Failure 400 {object} ErrorResponse
+// @Router /tokens [get]
 func createPairById(w http.ResponseWriter, r *http.Request) {
 	conn := connectToDb()
 	guid := r.URL.Query().Get("guid")
@@ -249,6 +273,16 @@ func createPairById(w http.ResponseWriter, r *http.Request) {
 	log.Print("tokens refresh with used ID parameter for ", guid)
 }
 
+// @createUser godoc
+//
+// @Summary register user from DB and get start pair tokens
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param user body User true "user register data"
+// @Success 201 {array} Response
+// @Failure 400 {object} ErrorResponse
+// @Router /register [post]
 func createUser(w http.ResponseWriter, r *http.Request) {
 	conn := connectToDb()
 

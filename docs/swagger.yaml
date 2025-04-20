@@ -1,4 +1,35 @@
 basePath: /
+definitions:
+  main.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  main.Request:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+    type: object
+  main.Response:
+    properties:
+      access_token:
+        type: string
+      expires_at:
+        type: string
+      guid:
+        type: string
+      refresh_token:
+        type: string
+    type: object
+  main.User:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
 host: jwt-auth-4tmd.onrender.com
 info:
   contact:
@@ -10,6 +41,95 @@ info:
   title: '[JWT tokens service] Swagger API'
   version: 0.0.1
 paths:
+  /refresh:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: old tokens
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/main.Request'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/main.Response'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/main.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/main.ErrorResponse'
+      summary: get pair new access+refresh tokens by old pair tokens
+      tags:
+      - auth
+  /register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: user register data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/main.User'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            items:
+              $ref: '#/definitions/main.Response'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.ErrorResponse'
+      summary: register user from DB and get start pair tokens
+      tags:
+      - auth
+  /tokens:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID
+        format: uuid
+        in: query
+        name: guid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/main.Response'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.ErrorResponse'
+      summary: get pair access+refresh tokens by ID
+      tags:
+      - auth
   /uptime:
     get:
       responses:
