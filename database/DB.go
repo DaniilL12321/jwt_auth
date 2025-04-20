@@ -142,3 +142,17 @@ func CheckEmail(conn *pgx.Conn, email string) (bool, error) {
 	}
 	return true, nil
 }
+
+func FindEmailFromId(conn *pgx.Conn, id string) (string, error) {
+	query, err := conn.Query(context.Background(), "SELECT email FROM users WHERE guid = $1", id)
+	if err != nil {
+		return "", err
+	}
+	defer query.Close()
+	var email string
+	if query.Next() {
+		query.Scan(&email)
+	}
+
+	return email, nil
+}

@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"testTaskBackDev/auth"
 	"testTaskBackDev/database"
+	"testTaskBackDev/smtp"
 	"time"
 )
 
@@ -94,13 +95,29 @@ func createPairByTokens(w http.ResponseWriter, r *http.Request) {
 	}
 	//log.Println(claims.Sub)
 
-	if claims.Ip != auth.GetIpUser(r) {
-		errorResponse := ErrorResponse{
-			Error: "ip not correct",
+	var email string
+	ip := auth.GetIpUser(r)
+	if claims.Ip != ip {
+		email, err = database.FindEmailFromId(conn, claims.Sub)
+		if err != nil {
+			w.Header().Add("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(ErrorResponse{Error: err.Error()})
+			log.Error("alert message not send to " + email + " by new IP request with token: " + ip)
+			return
+		}
+
+		log.Println("alert message send to " + email + " by new IP request with token: " + ip)
+
+		_, err := smtp.SendIpMessage(ip, email)
+		if err != nil {
+			w.Header().Add("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(ErrorResponse{Error: err.Error()})
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusForbidden)
-		json.NewEncoder(w).Encode(errorResponse)
+		json.NewEncoder(w).Encode(ErrorResponse{Error: "ip not correct"})
 		return
 	}
 
@@ -122,12 +139,9 @@ func createPairByTokens(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !isOkToken {
-		errorResponse := ErrorResponse{
-			Error: "token not valid",
-		}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(errorResponse)
+		json.NewEncoder(w).Encode(ErrorResponse{Error: "token not valid"})
 		return
 	}
 
