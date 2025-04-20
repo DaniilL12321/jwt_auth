@@ -86,7 +86,7 @@ const docTemplate = `{
                 "tags": [
                     "auth"
                 ],
-                "summary": "register user from DB and get start pair tokens",
+                "summary": "register user in DB and get start pair tokens and ID",
                 "parameters": [
                     {
                         "description": "user register data",

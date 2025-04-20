@@ -100,7 +100,7 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/main.ErrorResponse'
-      summary: register user from DB and get start pair tokens
+      summary: register user in DB and get start pair tokens and ID
       tags:
       - auth
   /tokens:

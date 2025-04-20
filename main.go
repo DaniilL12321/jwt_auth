@@ -275,7 +275,7 @@ func createPairById(w http.ResponseWriter, r *http.Request) {
 
 // @createUser godoc
 //
-// @Summary register user from DB and get start pair tokens
+// @Summary register user in DB and get start pair tokens and ID
 // @Tags auth
 // @Accept json
 // @Produce json
