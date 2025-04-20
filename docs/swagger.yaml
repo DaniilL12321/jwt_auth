@@ -9,5 +9,13 @@ info:
     name: MIT License
   title: '[JWT tokens service] Swagger API'
   version: 0.0.1
-paths: {}
+paths:
+  /uptime:
+    get:
+      responses:
+        "200":
+          description: OK
+      summary: get time work server
+      tags:
+      - default
 swagger: "2.0"

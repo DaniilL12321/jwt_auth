@@ -14,5 +14,19 @@
     },
     "host": "jwt-auth-4tmd.onrender.com",
     "basePath": "/",
-    "paths": {}
+    "paths": {
+        "/uptime": {
+            "get": {
+                "tags": [
+                    "default"
+                ],
+                "summary": "get time work server",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        }
+    }
 }

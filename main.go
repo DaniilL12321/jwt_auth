@@ -64,6 +64,12 @@ func main() {
 
 var startTime time.Time
 
+// @uptime godoc
+//
+// @Summary get time work server
+// @Tags default
+// @Success 200
+// @Router /uptime [get]
 func uptimeCheck(w http.ResponseWriter, request *http.Request) {
 
 	uptime := time.Since(startTime).Milliseconds()
