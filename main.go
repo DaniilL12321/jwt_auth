@@ -6,6 +6,7 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"testTaskBackDev/auth"
 	"testTaskBackDev/database"
@@ -130,6 +131,12 @@ func createPairByTokens(w http.ResponseWriter, r *http.Request) {
 	}
 	//log.Println("Decode refreshToken:", decodedRefreshToken)
 	isOkToken, err := database.CheckRefreshToken(conn, decodedRefreshToken, claims.Sub)
+	if err == bcrypt.ErrMismatchedHashAndPassword {
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(ErrorResponse{Error: "refresh_token hash and password not same"})
+		return
+	}
 	if err != nil {
 		log.Error(err)
 		w.Header().Add("Content-Type", "application/json")
