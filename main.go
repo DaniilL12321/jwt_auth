@@ -42,6 +42,11 @@ type User struct {
 // @version 0.0.1
 // @host jwt-auth-4tmd.onrender.com
 // @BasePath /
+
+// ** \\ при запросе со свагера в локалке используетс http на хост, где https
+// ** \\ из-за этого запрос не проходит, для решения проблемы нужно добавить // @schemes https
+// ** \\ либо поменять на локальный хост (localhost:8080)
+
 // @description This documentation describes [JWT tokens service] Swagger API
 // @contact.name github Open Source Code
 // @contact.url https://github.com/DaniilL12321/jwt_auth
