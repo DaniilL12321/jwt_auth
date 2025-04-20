@@ -37,11 +37,24 @@ type User struct {
 
 func main() {
 	godotenv.Load()
+	startTime = time.Now()
 
+	http.HandleFunc("GET /uptime", uptimeCheck)
 	http.HandleFunc("GET /tokens", createPairById)
 	http.HandleFunc("POST /refresh", createPairByTokens)
 	http.HandleFunc("POST /register", createUser)
 	http.ListenAndServe(":8080", nil)
+}
+
+var startTime time.Time
+
+func uptimeCheck(w http.ResponseWriter, request *http.Request) {
+
+	uptime := time.Since(startTime).Milliseconds()
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(uptime)
+	log.Println("check uptime: ", uptime)
+	return
 }
 
 func connectToDb() (conn *pgx.Conn) {
