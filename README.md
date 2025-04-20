@@ -1,6 +1,6 @@
 ## JWT auth service
 
-для тестирования можно воспользоваться [полноценно функционирующим сервисом](https://jwt-auth-4tmd.onrender.com/), размещенным на [render.com](https://render.com)
+для тестирования можно воспользоваться [полноценно функционирующим сервисом](https://jwt-auth-4tmd.onrender.com/swagger), размещенным на [render.com](https://render.com)
 
 сервис бесплатный, могут быть задержки в ответе
 
