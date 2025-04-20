@@ -1,7 +1,18 @@
 {
     "swagger": "2.0",
     "info": {
-        "contact": {}
+        "description": "This documentation describes [JWT tokens service] Swagger API",
+        "title": "[JWT tokens service] Swagger API",
+        "contact": {
+            "name": "github Open Source Code",
+            "url": "https://github.com/DaniilL12321/jwt_auth"
+        },
+        "license": {
+            "name": "MIT License"
+        },
+        "version": "0.0.1"
     },
+    "host": "jwt-auth-4tmd.onrender.com",
+    "basePath": "/",
     "paths": {}
 }

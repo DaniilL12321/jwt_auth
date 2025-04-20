@@ -38,6 +38,14 @@ type User struct {
 	Password string `json:"password"`
 }
 
+// @title [JWT tokens service] Swagger API
+// @version 0.0.1
+// @host jwt-auth-4tmd.onrender.com
+// @BasePath /
+// @description This documentation describes [JWT tokens service] Swagger API
+// @contact.name github Open Source Code
+// @contact.url https://github.com/DaniilL12321/jwt_auth
+// @license.name MIT License
 func main() {
 	godotenv.Load()
 	startTime = time.Now()

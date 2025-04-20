@@ -1,4 +1,13 @@
+basePath: /
+host: jwt-auth-4tmd.onrender.com
 info:
-  contact: {}
+  contact:
+    name: github Open Source Code
+    url: https://github.com/DaniilL12321/jwt_auth
+  description: This documentation describes [JWT tokens service] Swagger API
+  license:
+    name: MIT License
+  title: '[JWT tokens service] Swagger API'
+  version: 0.0.1
 paths: {}
 swagger: "2.0"
