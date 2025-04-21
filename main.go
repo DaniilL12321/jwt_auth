@@ -10,6 +10,7 @@ import (
 	"github.com/swaggo/http-swagger"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
+	"net/mail"
 	"testTaskBackDev/auth"
 	"testTaskBackDev/database"
 	_ "testTaskBackDev/docs"
@@ -297,6 +298,13 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 	email := user.Email
 	password := user.Password
 
+	if !validEmail(email) {
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(ErrorResponse{Error: "email address is invalid"})
+		return
+	}
+
 	EmailIsOk, _ := database.CheckEmail(conn, email)
 	if !EmailIsOk {
 		w.Header().Add("Content-Type", "application/json")
@@ -321,4 +329,9 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 
 	log.Print("register new user: ", email)
+}
+
+func validEmail(email string) bool {
+	_, err := mail.ParseAddress(email)
+	return err == nil
 }
