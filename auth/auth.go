@@ -2,6 +2,7 @@ package auth
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
 	"errors"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
@@ -30,10 +31,14 @@ func CreateAccessToken(ip, guid string, signature []byte) (accessToken string, e
 	return token.SignedString(signature)
 }
 
-func CreateRefreshToken() (refreshToken []byte, hash []byte, err error) {
-	refreshToken = make([]byte, 72)
+func CreateRefreshToken(accessToken string) (refreshToken []byte, hash []byte, err error) {
+	hashPart := sha256.Sum256([]byte(accessToken))
+	partAccessToken := hashPart[:5]
 
-	rand.Read(refreshToken)
+	randomPart := make([]byte, 67)
+	rand.Read(randomPart)
+
+	refreshToken = append(randomPart, partAccessToken...)
 
 	hash, _ = bcrypt.GenerateFromPassword(refreshToken, bcrypt.DefaultCost)
 
@@ -42,7 +47,7 @@ func CreateRefreshToken() (refreshToken []byte, hash []byte, err error) {
 
 func CreatePairTokens(ip, guid string, signature []byte) (accessToken string, refreshToken []byte, hash []byte, err error) {
 	accessToken, _ = CreateAccessToken(ip, guid, signature)
-	refreshToken, hash, _ = CreateRefreshToken()
+	refreshToken, hash, _ = CreateRefreshToken(accessToken)
 
 	//fmt.Println("\nаксес:", accessToken)
 	//fmt.Println("\nрефреш:", base64.StdEncoding.EncodeToString(refreshToken))

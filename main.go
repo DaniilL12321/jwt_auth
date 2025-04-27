@@ -185,7 +185,7 @@ func createPairByTokens(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//log.Println("Decode refreshToken:", decodedRefreshToken)
-	isOkToken, err := database.CheckRefreshToken(conn, decodedRefreshToken, claims.Sub)
+	isOkToken, err := database.CheckRefreshToken(conn, decodedRefreshToken, accessToken, claims.Sub)
 	if err == bcrypt.ErrMismatchedHashAndPassword {
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
@@ -208,7 +208,7 @@ func createPairByTokens(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var newAccessToken, newRefreshToken string
-	newAccessToken, newRefreshToken, err = database.UpdateRefreshToken(conn, decodedRefreshToken, claims.Sub, r)
+	newAccessToken, newRefreshToken, err = database.UpdateRefreshToken(conn, decodedRefreshToken, accessToken, claims.Sub, r)
 
 	response := Response{
 		Guid:         claims.Sub,

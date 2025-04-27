@@ -1,8 +1,11 @@
 package database
 
 import (
+	"bytes"
 	"context"
+	"crypto/sha256"
 	"encoding/base64"
+	"errors"
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v4"
 	"golang.org/x/crypto/bcrypt"
@@ -46,8 +49,8 @@ func SaveDataUser(conn *pgx.Conn, email string, password string, r *http.Request
 	return accessToken, base64.StdEncoding.EncodeToString(refreshToken), nil
 }
 
-func UpdateRefreshToken(conn *pgx.Conn, refreshToken []byte, guid string, r *http.Request) (string, string, error) {
-	acceptRefresh, _ := CheckRefreshToken(conn, refreshToken, guid)
+func UpdateRefreshToken(conn *pgx.Conn, refreshToken []byte, accessToken string, guid string, r *http.Request) (string, string, error) {
+	acceptRefresh, _ := CheckRefreshToken(conn, refreshToken, accessToken, guid)
 
 	if acceptRefresh {
 		ip := auth.GetIpUser(r)
@@ -71,14 +74,25 @@ func UpdateRefreshToken(conn *pgx.Conn, refreshToken []byte, guid string, r *htt
 	return "", "", nil
 }
 
-func CheckRefreshToken(conn *pgx.Conn, refreshToken []byte, guid string) (bool, error) {
+func CheckRefreshToken(conn *pgx.Conn, refreshToken []byte, accessToken string, guid string) (bool, error) {
 	savedHashRefreshToken, _ := FindLastRefreshToken(conn, guid)
+
 	if err := bcrypt.CompareHashAndPassword(savedHashRefreshToken, refreshToken); err != nil {
 		//fmt.Println("not correct refresh token")
 		//println(base64.StdEncoding.EncodeToString(refreshToken))
 		//println(base64.StdEncoding.EncodeToString(savedHashRefreshToken))
 		return false, err
 	}
+
+	partAccessToken := refreshToken[len(refreshToken)-5:]
+
+	currentHashPart := sha256.Sum256([]byte(accessToken))
+	currentPartAccessToken := currentHashPart[:5]
+
+	if !bytes.Equal(partAccessToken, currentPartAccessToken) {
+		return false, errors.New("refresh token not linked to current access token")
+	}
+
 	//fmt.Println("token ok")
 	return true, nil
 }
